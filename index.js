@@ -1,79 +1,70 @@
 const express = require('express');
+
 const db = require('./data/hubs-model');
 
 const server = express();
 
-// Middleware
-server.use(express.json()); // teaches express how to parse JSON from the request body
-
+server.use(express.json());
 
 server.get('/', (req, res) => {
-    //axios.get() .then(res)
-    // 200-299---success
-    //300-399--- (these are status codes)
-    //400-499---users errors
-    //500-599---server errors
-    res.status(200).send('Hello Web19')
+    res.send('Hello Web20 Node Edition');
 })
 
-
-
-server.get('/now', (req, res) => {
-    const now = new Date().toString();
-    res.send(now)
+server.get('/hubs', (req,res) => {
+   db.find()
+   .then(hubs => {
+       res.status(200).json(hubs)
+   })
+   .catch(err => {
+       res.status(500).json(err)
+   })
 })
 
-//CRUD
-
-//R
-
-server.get('/hubs', (req, res) => {
-    db.find()
-    .then(hubs => res.status(200).json(hubs))
-    .catch(err => res.status(500).json({message: 'Something went wrong retrieving the hubs'}))
-})
-
-//C
-
-server.post('/hubs', (req, res) => {
-    //axios.post('/', {hubInfo})
+server.post('/hubs', (req,res) => {
     const hubInfo = req.body;
-    console.log(hubInfo)
-    db.add(hubInfo)
-    .then(hub => res.status(201).json(hub))
-    .catch(err => res.status(500).json('couldnt add hub'))
-})
+    console.log(hubInfo);
 
-//D
+    db.add(hubInfo)
+    .then(hub => {
+        res.status(201).json(hub);
+    })
+    .catch( err => {
+        res.status(500).json(err);
+    })
+})
 
 server.delete('/hubs/:id', (req, res) => {
-    const id = req.params.id;
+    const { id } = req.params;
+
     db.remove(id)
-    .then(count => {
-        if(count){
-            res.status(204).json({message:"It worked"})
-        }
-        else{
-            res.status(404).json({message: "there is no hub with this id"})
+    .then( deleted => {
+        if(deleted) {
+            res.status(204).end();
+        } else {
+            res.status(404).json({ message: 'Hub could not be found'})
         }
     })
-    .catch(err => res.status(500).json({message: "error deleting hub"}))
+    .catch( err => {
+        res.status(500).json(err);
+    })
 })
-
-//U
 
 server.put('/hubs/:id', (req, res) => {
     const id = req.params.id;
     const changes = req.body;
+
     db.update(id, changes)
-    .then(updated => {
+    .then( updated => {
         if(updated){
-            res.status(200).json({success: true, updated})
+            res.status(200).json(updated);
         } else {
-            res.status(404).json({message: "there is no hub with this id"})
+            res.status(404).json({ message: 'Hub could not be found'})
         }
     })
-    .catch(err => res.status(500).json({message: "something went wrong updating the hub"}))
+    .catch( err => {
+        res.status(500).json(err);
+    })
 })
 
-server.listen(4000, () => console.log('My first express server is running on port 4000'));
+const port = 5000;
+server.listen(port, () => console.log(`\n*** Running on port ${port} ***\n`))
